@@ -97,4 +97,8 @@ export class CartService {
       throw error;
     }
   }
+
+  async updateStatusByUserId(userId: string, status: string, trx) {
+    await trx('carts').where('user_id', userId).update({ status });
+  }
 }

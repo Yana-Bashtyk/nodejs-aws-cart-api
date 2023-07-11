@@ -1,5 +1,4 @@
 import { Controller, Get, Delete, Put, Body, Req, Post, UseGuards, HttpStatus } from '@nestjs/common';
-
 import { BasicAuthGuard, JwtAuthGuard } from '../auth';
 import { OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
@@ -7,6 +6,7 @@ import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
 import { ApiTags } from '@nestjs/swagger';
 import { CartItemDto } from './dto/cart_item.dto';
+import { CheckoutDto } from './dto/checkout.dto';
 import { knex } from '../../db/knexconfig';
 import { Product } from '../cart/models/index';
 @ApiTags('api/profile/cart')
@@ -66,7 +66,7 @@ export class CartController {
   // @UseGuards(JwtAuthGuard)
   @UseGuards(BasicAuthGuard)
   @Post('checkout')
-  async checkout(@Req() req: AppRequest, @Body() body: CartItemDto) {
+  async checkout(@Req() req: AppRequest, @Body() body: CheckoutDto) {
     const userId = getUserIdFromRequest(req);
     const cart = await this.cartService.findByUserId(userId);
 
@@ -84,16 +84,31 @@ export class CartController {
 
     const { id: cartId, items } = cart;
     const total = calculateCartTotal(cart, products);
-    const order = this.orderService.create({
-      ...body, // TODO: validate and pick only necessary data
-      userId,
-      cartId,
-      items,
-      total,
-    });
-    this.cartService.removeByUserId(userId);
 
-    return {
+    let order;
+    try {
+       await knex.transaction(async (trx) => {
+        order = await this.orderService.create(
+          {
+            ...body, // TODO: validate and pick only necessary data
+            user_id: userId,
+            cart_id: cartId,
+            total,
+          },
+          trx,
+        );
+
+        return await this.cartService.updateStatusByUserId(userId, 'ORDERED', trx);
+      });
+    } catch (error) {
+      console.error('Transaction failed:', error);
+      return {
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+        message: 'Checkout failed',
+      };
+    }
+
+     return {
       statusCode: HttpStatus.OK,
       message: 'OK',
       data: { order }
