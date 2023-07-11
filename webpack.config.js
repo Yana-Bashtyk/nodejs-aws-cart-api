@@ -4,6 +4,13 @@ module.exports = (options, webpack) => {
   const lazyImports = [
     '@nestjs/microservices/microservices-module',
     '@nestjs/websockets/socket-module',
+    'better-sqlite3',
+    'tedious',
+    'mysql',
+    'mysql2',
+    'oracledb',
+    'sqlite3',
+    'pg-query-stream'
   ];
 
   return {

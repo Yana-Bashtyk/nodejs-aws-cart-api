@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { Cart } from '../models';
 import { knex } from '../../../db/knexconfig';
+import { use } from 'passport';
+import { ExceptionsHandler } from '@nestjs/core/exceptions/exceptions-handler';
+import { CartItemDto } from '../dto/cart_item.dto';
 @Injectable()
 export class CartService {
-  // private userCarts: Record<string, Cart> = {};
-
   async findByUserId(userId: string) {
     const cart = await knex('carts').where({ user_id: userId }).first();
 
@@ -17,8 +18,12 @@ export class CartService {
   }
 
   async createByUserId(userId: string) {
-    const [newCart] = await knex('carts')
+    console.log('createByUserId', userId);
+
+    const cartId = uuidv4();
+    await knex('carts')
       .insert({
+        id: cartId,
         user_id: userId,
         status: 'OPEN',
         created_at: new Date(),
@@ -26,10 +31,12 @@ export class CartService {
       })
       .returning('*');
 
-    return newCart;
+    const emptyCart = { id: cartId, items: [] };
+    return emptyCart;
   }
 
-  async findOrCreateByUserId(userId: string) {
+  async findOrCreateByUserId(userId: string): Promise<Cart> {
+    console.log('userId',userId);
     let cart = await this.findByUserId(userId);
 
     if (!cart) {
@@ -39,27 +46,55 @@ export class CartService {
     return cart;
   }
 
-  async updateByUserId(userId: string, { items }: Cart) {
-    const cart = await this.findOrCreateByUserId(userId);
+  async updateByUserId(userId: string, cartItem: CartItemDto): Promise<Cart> {
+    const trx = await knex.transaction();
 
-    await knex('cart_items').where({ cart_id: cart.id }).del();
+    try {
+      let cart = await trx('carts').where({ user_id: userId, status: 'OPEN' }).first();
 
-    const newItems = items.map((item) => ({
-      cart_id: cart.id,
-      product_id: item.product.id,
-      count: item.count,
-    }));
-    await knex('cart_items').insert(newItems);
+      if (!cart) {
+        const newCart = { id: uuidv4(), user_id: userId, status: 'OPEN', created_at: new Date(), updated_at: new Date() };
+        await trx('carts').insert(newCart);
+        cart = newCart;
+      }
 
-    // Update the cart's updated_at field
-    await knex('carts').where({ id: cart.id }).update({ updated_at: new Date() });
+      console.log('updateByUserId' ,cart, cartItem)
+      const existingCartItem = await trx('cart_items').where({ cart_id: cart.id, product_id: cartItem.id }).first();
+  
+      if (existingCartItem) {
+        await trx('cart_items').where({ id: existingCartItem.id }).update({ count: cartItem.count });
+      } else {
+        const newCartItem = { cart_id: cart.id, product_id: cartItem.id, count: cartItem.count };
+        await trx('cart_items').insert(newCartItem);
+      }
+      await trx.commit();
 
-    const updatedCart = await this.findByUserId(userId);
-    return updatedCart;
+      const updatedCart = await knex('carts').where({ id: cart.id }).first();
+      updatedCart.items = await knex('cart_items').where({ cart_id: cart.id });
+
+      return updatedCart;
+    } catch (error) {
+      await trx.rollback();
+      throw error;
+    }
   }
 
-  removeByUserId(userId): void {
-    this.userCarts[ userId ] = null;
-  }
+  async removeByUserId(userId: string): Promise<string> {
+    const trx = await knex.transaction();
 
+    try {
+      const cart = await trx('carts').where({ user_id: userId }).first();
+
+      if (cart) {
+        await trx('cart_items').where({ cart_id: cart.id }).del();
+        await trx('carts').where({ id: cart.id }).del();
+      }
+
+      await trx.commit();
+      return userId;
+    } catch (error) {
+      await trx.rollback();
+      throw error;
+    }
+  }
 }

@@ -31,7 +31,13 @@ export class NodejsAwsCartApiStack extends cdk.Stack {
           '@nestjs/websockets/socket-module',
           '@nestjs/microservices/microservices-module',
           '@nestjs/microservices',
-          'class-validator',
+          'better-sqlite3',
+          'tedious',
+          'mysql',
+          'mysql2',
+          'oracledb',
+          'sqlite3',
+          'pg-query-stream'
         ],
       },
     }
