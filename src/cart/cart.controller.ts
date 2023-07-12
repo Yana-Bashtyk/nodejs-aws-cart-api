@@ -8,7 +8,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { CartItemDto } from './dto/cart_item.dto';
 import { CheckoutDto } from './dto/checkout.dto';
 import { knex } from '../../db/knexconfig';
-import { Product } from '../cart/models/index';
+import { ProductInTable } from '../cart/models/index';
 @ApiTags('api/profile/cart')
 @Controller('api/profile/cart')
 export class CartController {
@@ -21,10 +21,9 @@ export class CartController {
   @UseGuards(BasicAuthGuard)
   @Get()
   async findUserCart(@Req() req: AppRequest) {
-    console.log('requset', req);
     const cart = await this.cartService.findOrCreateByUserId(getUserIdFromRequest(req));
 
-    const products: Product[] = await knex('products').select('*');
+    const products: ProductInTable[] = await knex('products').select('*');
 
     return {
       statusCode: HttpStatus.OK,
@@ -39,7 +38,7 @@ export class CartController {
   async updateUserCart(@Req() req: AppRequest, @Body() body: CartItemDto) {
     console.log('updateUserCart',body )
     const cart = await this.cartService.updateByUserId(getUserIdFromRequest(req), body);
-    const products: Product[] = await knex('products').select('*');
+    const products: ProductInTable[] = await knex('products').select('*');
 
     return {
       statusCode: HttpStatus.OK,
@@ -80,7 +79,7 @@ export class CartController {
       }
     }
 
-    const products: Product[] = await knex('products').select('*');
+    const products: ProductInTable[] = await knex('products').select('*');
 
     const { id: cartId, items } = cart;
     const total = calculateCartTotal(cart, products);
@@ -90,7 +89,9 @@ export class CartController {
        await knex.transaction(async (trx) => {
         order = await this.orderService.create(
           {
-            ...body, // TODO: validate and pick only necessary data
+            payment: {},
+            delivery: JSON.stringify(body.address),
+            comments: JSON.stringify(body.address.comment),
             user_id: userId,
             cart_id: cartId,
             total,

@@ -22,6 +22,7 @@
     "cdk": "cdk",
     "cdk:deploy": "npx cdk deploy --profile yanaadmin",
     "cdk:destroy": "npx cdk destroy --profile yanaadmin",
+    "cdk:build:deploy": "npx nest build --webpack && npm run cdk:deploy",
     "rds:new-migration": "npx knex migrate:make create_cart_tables --knexfile ./db/knexfile.ts",
     "rds:create": "npx ts-node ./node_modules/.bin/knex migrate:latest --knexfile ./db/knexfile.ts",
     "rds:drop": "npx ts-node ./node_modules/.bin/knex migrate:rollback --knexfile ./db/knexfile.ts",

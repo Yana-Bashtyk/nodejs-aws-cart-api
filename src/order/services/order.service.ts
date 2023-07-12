@@ -34,4 +34,9 @@ export class OrderService {
 
     await knex('orders').where('id', orderId).update(data);
   }
+
+  async getOrders(): Promise<any[]> {
+    const orders = await knex('orders').select('*');
+    return orders;
+  }
 }

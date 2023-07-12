@@ -1,10 +1,6 @@
-import { IsUUID, IsString, IsNumber, Min } from 'class-validator';
-
-export class CartItemDto {
-  @IsNumber()
-  @Min(1)
-  count: number;
-
+import { IsNumber, Min, IsUUID, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+export class ProductDto {
   @IsUUID()
   id: string;
 
@@ -16,4 +12,14 @@ export class CartItemDto {
 
   @IsNumber()
   price: number;
+}
+
+export class CartItemDto {
+  @IsNumber()
+  @Min(1)
+  count: number;
+
+  @ValidateNested()
+  @Type(() => ProductDto)
+  product: ProductDto;
 }

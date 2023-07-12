@@ -26,7 +26,7 @@ export class NodejsAwsCartApiStack extends cdk.Stack {
       },
       bundling: {
         externalModules: [
-          'class-transformer',
+          'class-transformer/storage',
           '@nestjs/microservices',
           '@nestjs/websockets/socket-module',
           '@nestjs/microservices/microservices-module',

@@ -22,6 +22,7 @@ async function createApp() {
   app.enableCors({
     origin: (req, callback) => callback(null, true),
   });
+  
   app.use(helmet());
 
   return app;
@@ -34,6 +35,12 @@ async function bootstrap(event?: APIGatewayProxyEvent, context?: Context) {
   await app.init();
 
   const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Replace with your allowed origin
+    res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+    next();
+  });
   return serverlessExpress.configure({ app: expressApp });
 }
 
