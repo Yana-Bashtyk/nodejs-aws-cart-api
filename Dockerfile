@@ -13,7 +13,7 @@ FROM node:16-alpine AS runtime
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY --from=build /app/package*.json ./
 
 RUN npm install --omit=dev && npm cache clean --force
 
