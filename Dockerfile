@@ -1,20 +1,25 @@
-# Use the official AWS Lambda Node.js 18 image as the base image
-FROM public.ecr.aws/lambda/nodejs:18
+FROM node:18-alpine AS build
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
+RUN npm install
 
-# Install the dependencies
-RUN npm ci --verbose || (cat /root/.npm/_logs/*-debug.log && false)
-
-# Copy the rest of the application code to the working directory
 COPY . .
 
-# Build the Nest.js application
 RUN npm run build
 
-# Set the Lambda handler
-CMD ["dist/src/main.cartApiHandler"]
+FROM node:18-alpine AS runtime
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install --only=production
+
+COPY --from=build /app/dist /app/dist
+EXPOSE 4000
+
+ENV PORT=4000
+
+CMD ["npm", "run", "start:prod"]
