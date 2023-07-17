@@ -11,14 +11,15 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  validateUser(name: string, password: string): any {
-    const user = this.usersService.findOne(name);
+  async validateUser(name: string, password: string) {
+    const user = await this.usersService.findByName(name);
 
-    if (user) {
-      return user;
+    if (user && user.password === password) {
+      const { password, ...result } = user;
+      return result;
     }
 
-    return this.usersService.createOne({ name, password })
+    return await this.usersService.createOne({ name, password })
   }
 
   login(user: User, type) {
@@ -43,7 +44,7 @@ export class AuthService {
 
   loginBasic(user: User) {
     // const payload = { username: user.name, sub: user.id };
-    console.log(user);
+    console.log('user1', user);
 
     function encodeUserToken(user) {
       const { id, name, password } = user;
@@ -57,7 +58,4 @@ export class AuthService {
       access_token: encodeUserToken(user),
     };
   }
-
-
-
 }
