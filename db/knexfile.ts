@@ -12,11 +12,11 @@ const config: Knex.Config = {
     database: process.env.RDS_DATABASE,
   },
   migrations: {
-    directory: './migrations',
+    directory: './local/migrations',
     extension: 'ts',
   },
   seeds: {
-    directory: './seeds',
+    directory: './local/seeds',
     extension: 'ts',
   },
 };
