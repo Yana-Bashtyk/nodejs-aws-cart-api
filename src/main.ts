@@ -1,5 +1,4 @@
 import { NestFactory } from '@nestjs/core';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { APIGatewayProxyEvent, Context } from 'aws-lambda';
@@ -10,14 +9,6 @@ const port = process.env.PORT || 4000;
 
 async function createApp() {
   const app = await NestFactory.create(AppModule);
-
-  // const config = new DocumentBuilder()
-  //   .setTitle('Aws Cart Api')
-  //   .setDescription('AWS Cart Api documentation')
-  //   .setVersion('1.0.0')
-  //   .build();
-  // const document = SwaggerModule.createDocument(app, config);
-  // SwaggerModule.setup('swagger', app, document);
 
   app.enableCors({
     origin: (req, callback) => callback(null, true),

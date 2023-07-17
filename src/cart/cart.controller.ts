@@ -4,12 +4,11 @@ import { OrderService } from '../order';
 import { AppRequest, getUserIdFromRequest } from '../shared';
 import { calculateCartTotal } from './models-rules';
 import { CartService } from './services';
-import { ApiTags } from '@nestjs/swagger';
 import { CartItemDto } from './dto/cart_item.dto';
 import { CheckoutDto } from './dto/checkout.dto';
 import { knex } from '../../db/knexconfig';
 import { ProductInTable } from '../cart/models/index';
-@ApiTags('api/profile/cart')
+
 @Controller('api/profile/cart')
 export class CartController {
   constructor(
