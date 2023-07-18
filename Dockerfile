@@ -18,6 +18,6 @@ COPY --from=build /app/package*.json ./
 RUN npm install --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist /app/dist
-ENV NODE_ENV production
+EXPOSE 4000
 
 CMD ["npm", "run", "start:prod"]
