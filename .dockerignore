@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+dist
+.dockerignore
+Dockerfile
+Dockerrun.aws.json*
+.git
+.gitignore
+.env
+cdk.out
+npm-debug.log
+db/local/
+test/
+.eslintrc.js
+.prettierrc
