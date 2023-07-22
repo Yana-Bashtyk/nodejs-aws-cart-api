@@ -8,7 +8,7 @@ Dockerrun.aws.json*
 .gitignore
 .env
 cdk.out
-npm-debug.log
+
 db/local/
 test/
 .eslintrc.js
